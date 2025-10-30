@@ -5,10 +5,12 @@ import os
 
 from config import *
 
+from pathlib import Path
+
 
 # Ensure the logs folder exists before configuring logging.
-# `LOGS_FOLDER` is expected to be a Path object imported from `config`.
-LOGS_FOLDER.mkdir() if not LOGS_FOLDER.exists() else None
+# Use parents=True and exist_ok=True to be safe on repeated runs.
+LOGS_FOLDER.mkdir(parents=True, exist_ok=True)
 
 
 # Configure global logging for the script. Logs are written to
@@ -32,10 +34,9 @@ class Folder:
     """
 
     def __init__(self, path: Union[Path, str]) -> None:
-        # Store the path to operate on. Expectation: `path` supports
-        # `/` operator (i.e., is a pathlib.Path), but Union allows
-        # callers to pass a string as well.
-        self.path = path
+        # Store the path to operate on as a pathlib.Path for consistent
+        # path operations. Accept either a Path or a string.
+        self.path = Path(path)
 
     def _get_subfolder_paths(self) -> Iterable:
         """Yield subfolder paths inside this folder.
@@ -44,7 +45,8 @@ class Folder:
         directories. Returns generator of path-like strings that can
         be converted to Path objects by the caller.
         """
-        return (folder.path for folder in os.scandir(self.path) if folder.is_dir())
+        # Return actual Path objects for convenience when recursing.
+        return (Path(entry.path) for entry in os.scandir(self.path) if entry.is_dir())
 
     def _get_file_paths(self) -> Iterable:
         """Yield file paths (non-directories) inside this folder.
@@ -52,7 +54,10 @@ class Folder:
         This generator excludes directories. Each yielded item is the
         raw path string returned by os.DirEntry.path.
         """
-        return (file.path for file in os.scandir(self.path) if not file.is_dir())
+        # Yield Path objects for files inside this folder (non-directories).
+        return (
+            Path(entry.path) for entry in os.scandir(self.path) if not entry.is_dir()
+        )
 
     def _create_subfolder(self, subfolder_name: str) -> None:
         """Create a subfolder with the given name if it doesn't exist.
@@ -63,9 +68,9 @@ class Folder:
         """
         subfolder_path = self.path / subfolder_name
         if not subfolder_path.exists():
-            subfolder_path.mkdir()
+            subfolder_path.mkdir(parents=True, exist_ok=True)
 
-    def sort_files_by_extensions(self) -> None:
+    def sort_files_by_extensions(self, recursive: bool = True) -> None:
         """Move files into subfolders based on their file extensions.
 
         For each file in the folder, determine the extension (text after
@@ -76,26 +81,40 @@ class Folder:
         The original file is renamed (moved) into the new path and an
         INFO log is written for each move.
         """
-        for filepath in self._get_file_paths():
-            path = Path(filepath)
+        # Process files in the current directory first.
+        for path in self._get_file_paths():
             # Determine file extension by splitting on '.' and taking the
-            # last segment. This treats filenames without a dot as having
-            # the filename itself as 'extension' which will typically not
-            # match any entry in EXTENSIONS.
-            extension = filepath.split(".")[-1]
+            # last segment. Files without an extension will be ignored.
+            extension = path.name.rsplit(".", 1)[-1] if "." in path.name else ""
 
-            # Only process known extensions defined in config. `EXTENSIONS`
-            # is expected to be a collection (e.g., set or dict keys)
-            # imported from `config`.
-            if extension in EXTENSIONS:
+            if extension and extension in EXTENSIONS:
                 subfolder_name = get_subfolder_name_by_extension(extension)
                 # Create target subfolder if it doesn't exist.
                 self._create_subfolder(subfolder_name)
 
                 # Build the new destination path and rename (move) the file.
-                new_path = Path(self.path, subfolder_name, path.name)
+                new_path = self.path / subfolder_name / path.name
                 logging.info(f'{path.name} ---> {"/".join(new_path.parts[-2:])}')
                 path.rename(new_path)
+
+        # Optionally recurse into existing subfolders to process their files.
+        if recursive:
+            for subfolder_path in self._get_subfolder_paths():
+                # Skip the log folder or any target subfolders to avoid
+                # repeatedly moving files between the same subfolders.
+                # Only recurse into directories that are not one of the
+                # configured SUBFOLDER_NAMES or the logs directory.
+                if (
+                    subfolder_path.name in SUBFOLDER_NAMES
+                    or subfolder_path.name == LOGS_FOLDER.name
+                ):
+                    # Still recurse into subfolders inside target folders in case
+                    # there are nested directories to process; but skip recursing
+                    # into the top-level target subfolders to avoid infinite loops.
+                    continue
+
+                # Create a Folder for the subfolder and process its files.
+                Folder(subfolder_path).sort_files_by_extensions(recursive=True)
 
 
 def main() -> None:
