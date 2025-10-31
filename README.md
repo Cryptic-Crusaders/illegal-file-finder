@@ -2,12 +2,6 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/lesskop/file-sorter)
 ![GitHub repo size](https://img.shields.io/github/repo-size/lesskop/file-sorter)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/lesskop/file-sorter)
-![Stars](https://img.shields.io/github/stars/lesskop/file-sorter?style=social)
-
-<a href="https://www.youtube.com/watch?v=kzVqBtrlr9o">
-    <img alt="YouTube Video Views" src="https://img.shields.io/youtube/views/kzVqBtrlr9o?style=social">
-</a>
 
 Python script for sorting files into folders by extensions
 
