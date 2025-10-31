@@ -1,9 +1,9 @@
 # File sorter
 
-![GitHub last commit](https://img.shields.io/github/last-commit/lesskop/file-sorter)
-![GitHub repo size](https://img.shields.io/github/repo-size/lesskop/file-sorter)
+![GitHub last commit](https://img.shields.io/github/last-commit/Cryptic-Crusaders/illegal-file-finder)
+![GitHub repo size](https://img.shields.io/github/repo-size/Cryptic-Crusaders/illegal-file-finder)
 
-Python script for sorting files into folders by extensions
+Python script for finding illegal files in a Cyber Patriot competiton. Fork of [lesskop/file-sorter](https://github.com/lesskop/file-sorter).
 
 ## Quick start
 
@@ -53,13 +53,3 @@ You can check the logs in `logs/file_sorter.log` after script execution.
 [18:08:01] INFO - there are no passwords.txt ---> text/there are no passwords.txt
 [18:08:01] INFO - Script execution time: 0.01600000000144064 seconds
 ```
-
----
-
-## Content
-
-I did a general refactoring for this project so this content is out of date.
-
-[YouTube video](https://youtu.be/kzVqBtrlr9o)
-
-[Статья на Хабре](https://habr.com/ru/post/562362/)
