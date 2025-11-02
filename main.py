@@ -1,5 +1,4 @@
 from typing import Iterable, Union
-import logging
 import time
 import os
 
@@ -11,17 +10,6 @@ from pathlib import Path
 # Ensure the logs folder exists before configuring logging.
 # Use parents=True and exist_ok=True to be safe on repeated runs.
 LOGS_FOLDER.mkdir(parents=True, exist_ok=True)
-
-
-# Configure global logging for the script. Logs are written to
-# `logs/file_sorter.log` at DEBUG level with a simple time + level + message format.
-logging.basicConfig(
-    filename=f"logs/file_sorter.log",
-    level=logging.DEBUG,
-    format="[%(asctime)s] %(levelname)s - %(message)s",
-    datefmt="%H:%M:%S",
-    encoding="utf-8",
-)
 
 
 class Folder:
@@ -94,7 +82,6 @@ class Folder:
 
                 # Build the new destination path and rename (move) the file.
                 new_path = self.path / subfolder_name / path.name
-                logging.info(f'{path.name} ---> {"/".join(new_path.parts[-2:])}')
                 path.rename(new_path)
 
         # Optionally recurse into existing subfolders to process their files.
@@ -125,7 +112,6 @@ def main() -> None:
     """
     folder = Folder(FOLDER_PATH)
     print("Sorting files by extensions in", FOLDER_PATH)
-    logging.info(f"Sorting files by extensions in {FOLDER_PATH}")
     folder.sort_files_by_extensions()
 
 
@@ -135,4 +121,3 @@ if __name__ == "__main__":
     main()
     end_time = time.monotonic() - start_time
     print(f"Script execution time: {end_time} seconds")
-    logging.info(f"Script execution time: {end_time} seconds")
